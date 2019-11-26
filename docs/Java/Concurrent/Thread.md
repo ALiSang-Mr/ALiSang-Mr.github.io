@@ -3,9 +3,18 @@
 > 本文主要概要性的介绍线程的基础，为后面的章节深入介绍Java并发的知识提供基础
 
 
-
 [[TOC]]
 
+## 带着问题理解
+::: danger
+- 线程有哪几种状态？
+- 分别说明从一种状态到另一种状态转变有哪些方式？ 
+- 通常线程有哪几种使用方式？ 
+- 基础线程机制有哪些？ 
+- 线程的中断方式有哪些？ 
+- 线程的互斥同步方式有哪些？如何比较和选择？ 
+- 线程之间有哪些协作方式？
+:::
 ## 线程状态转换
 
 ![线程状态转换](../img/thread_001.jpg "线程状态")
@@ -81,19 +90,18 @@ LockSupport.parkUntil() 方法|-|
 通过 Thread 调用 start() 方法来启动线程。
 
 ``` java
-       public class MyRunnable implements Runnable {
-           public void run() {
-            // ...
-           }
-       }
+public class MyRunnable implements Runnable {
+   public void run() {
+    // ...
+   }
+}
 ```
 ``` java
-       public static void main(String[] args) {
-           MyRunnable instance = new MyRunnable();
-           Thread thread = new Thread(instance);
-           thread.start();
-       }
-
+public static void main(String[] args) {
+   MyRunnable instance = new MyRunnable();
+   Thread thread = new Thread(instance);
+   thread.start();
+}
 ```
 ### 继承Thread类
 
@@ -102,17 +110,17 @@ LockSupport.parkUntil() 方法|-|
  当调用 start() 方法启动一个线程时，虚拟机会将该线程放入就绪队列中等待被调度，当一个线程被调度时会执行该线程的 run() 方法。
 
 ``` java
-    public class MyThread extends Thread {
-        public void run() {
-            // ...
-        }
+public class MyThread extends Thread {
+    public void run() {
+        // ...
     }
+}
 ```
 ``` java
-    public static void main(String[] args) {
-        MyThread mt = new MyThread();
-        mt.start();
-    }
+public static void main(String[] args) {
+    MyThread mt = new MyThread();
+    mt.start();
+}
 ```
 
 ### 实现Callable接口(#a)
@@ -120,20 +128,20 @@ LockSupport.parkUntil() 方法|-|
 与 Runnable 相比，Callable 可以有**返回值**，返回值通过 FutureTask 进行封装。
 
 ``` java
-    public class MyCallable implements Callable<Integer> {
-        public Integer call() {
-            return 123;
-        }
+public class MyCallable implements Callable<Integer> {
+    public Integer call() {
+        return 123;
     }
+}
 ```
 ``` java
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
-        MyCallable mc = new MyCallable();
-        FutureTask<Integer> ft = new FutureTask<>(mc);
-        Thread thread = new Thread(ft);
-        thread.start();
-        System.out.println(ft.get());
-    }
+public static void main(String[] args) throws ExecutionException, InterruptedException {
+    MyCallable mc = new MyCallable();
+    FutureTask<Integer> ft = new FutureTask<>(mc);
+    Thread thread = new Thread(ft);
+    thread.start();
+    System.out.println(ft.get());
+}
 ```
 
 ### 实现接口 VS 继承Thread类 ?
@@ -164,10 +172,10 @@ main() 属于非守护线程。
 使用 setDaemon() 方法将一个线程设置为守护线程。
 
 ``` java
-    public static void main(String[] args) {
-        Thread thread = new Thread(new MyRunnable());
-        thread.setDaemon(true);
-    }
+public static void main(String[] args) {
+    Thread thread = new Thread(new MyRunnable());
+    thread.setDaemon(true);
+}
 ```
 
 ### sleep()
@@ -177,13 +185,13 @@ sleep() 可能会抛出 InterruptedException，因为异常不能跨线程传播
 因此必须在本地进行处理。线程中抛出的其它异常也同样需要在本地进行处理。
 
 ``` java
-    public void run() {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+public void run() {
+    try {
+        Thread.sleep(3000);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
     }
+}
 ```
 ### yield()
 
@@ -191,9 +199,9 @@ sleep() 可能会抛出 InterruptedException，因为异常不能跨线程传播
 该方法只是对线程调度器的一个建议，而且也只是建议具有相同优先级的其它线程可以运行。
 
 ``` java
-    public void run() {
-        Thread.yield();
-    }
+public void run() {
+    Thread.yield();
+}
 ```
 
 ## 线程中断
@@ -218,28 +226,28 @@ sleep() 可能会抛出 InterruptedException，因为异常不能跨线程传播
 因此会抛出一个 InterruptedException，从而提前结束线程，不执行之后的语句。
 
 ``` java
-    public class InterruptExample {
-    
-        private static class MyThread1 extends Thread {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(2000);
-                    System.out.println("Thread run");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+public class InterruptExample {
+
+    private static class MyThread1 extends Thread {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(2000);
+                System.out.println("Thread run");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
+}
 ```
 ``` java
-    public static void main(String[] args) throws InterruptedException {
-        Thread thread1 = new MyThread1();
-        thread1.start();
-        thread1.interrupt();
-        System.out.println("Main run");
-    }
+public static void main(String[] args) throws InterruptedException {
+    Thread thread1 = new MyThread1();
+    thread1.start();
+    thread1.interrupt();
+    System.out.println("Main run");
+}
 ```
 
 ### interrupted()
@@ -250,28 +258,28 @@ sleep() 可能会抛出 InterruptedException，因为异常不能跨线程传播
 <U>使用 interrupted() 方法来判断线程是否处于中断状态，从而提前结束线程。</u>
 
 ``` java
-    public class InterruptExample {
-    
-        private static class MyThread2 extends Thread {
-            @Override
-            public void run() {
-                while (!interrupted()) {
-                    // ..
-                }
-                System.out.println("Thread end");
+public class InterruptExample {
+
+    private static class MyThread2 extends Thread {
+        @Override
+        public void run() {
+            while (!interrupted()) {
+                // ..
             }
+            System.out.println("Thread end");
         }
     }
+}
 ```
 ``` java
-    public static void main(String[] args) throws InterruptedException {
-        Thread thread2 = new MyThread2();
-        thread2.start();
-        thread2.interrupt();
-    }
+public static void main(String[] args) throws InterruptedException {
+    Thread thread2 = new MyThread2();
+    thread2.start();
+    thread2.interrupt();
+}
 ```
 ``` java
-   Thread end   //interrupted()方法判断此线程没有被中断 所以执行了之后的方法
+Thread end   //interrupted()方法判断此线程没有被中断 所以执行了之后的方法
 ```
 
 ## Executor 线程池的中断操作
@@ -283,38 +291,38 @@ sleep() 可能会抛出 InterruptedException，因为异常不能跨线程传播
 以下使用 Lambda 创建线程，相当于创建了一个匿名内部线程。
 
 ``` java
-   public static void main(String[] args) {
-       ExecutorService executorService = Executors.newCachedThreadPool();
-       executorService.execute(() -> {
-           try {
-               Thread.sleep(2000);
-               System.out.println("Thread run");
-           } catch (InterruptedException e) {
-               e.printStackTrace();
-           }
-       });
-       executorService.shutdownNow();
-       System.out.println("Main run");
-   }
+public static void main(String[] args) {
+   ExecutorService executorService = Executors.newCachedThreadPool();
+   executorService.execute(() -> {
+       try {
+           Thread.sleep(2000);
+           System.out.println("Thread run");
+       } catch (InterruptedException e) {
+           e.printStackTrace();
+       }
+   });
+   executorService.shutdownNow();
+   System.out.println("Main run");
+}
 ```
 ``` java
-    Main run
-    java.lang.InterruptedException: sleep interrupted
-        at java.lang.Thread.sleep(Native Method)
-        at ExecutorInterruptExample.lambda$main$0(ExecutorInterruptExample.java:9)
-        at ExecutorInterruptExample$$Lambda$1/1160460865.run(Unknown Source)
-        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
-        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
-        at java.lang.Thread.run(Thread.java:745)
+Main run
+java.lang.InterruptedException: sleep interrupted
+    at java.lang.Thread.sleep(Native Method)
+    at ExecutorInterruptExample.lambda$main$0(ExecutorInterruptExample.java:9)
+    at ExecutorInterruptExample$$Lambda$1/1160460865.run(Unknown Source)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+    at java.lang.Thread.run(Thread.java:745)
 ```
 
 如果只想中断 Executor 中的一个线程，可以通过使用 submit() 方法来提交一个线程，它会返回一个 Future<?> 对象，通过调用该对象的 cancel(true) 方法就可以中断线程。
 
 ``` java
-    Future<?> future = executorService.submit(() -> {
-        // ..
-    });
-    future.cancel(true);
+Future<?> future = executorService.submit(() -> {
+    // ..
+});
+future.cancel(true);
 ```
 
 ## 线程互斥同步
@@ -330,11 +338,11 @@ Java 提供了两种锁机制来控制多个线程对共享资源的互斥访问
 1. 同步一个代码块
 
 ``` java
-    public void func() {
-        synchronized (this) {
-            // ...
-        }
+public void func() {
+    synchronized (this) {
+        // ...
     }
+}
 ```
 它只作用于同一个对象，如果调用两个对象上的同步代码块，就不会进行同步。
 
@@ -343,3 +351,226 @@ Java 提供了两种锁机制来控制多个线程对共享资源的互斥访问
 2. 同步一个方法
 
 3. 同步一个类
+
+### ReentrantLock
+
+ReentrantLock 是 java.util.concurrent(J.U.C)包中的锁。
+
+``` java
+public class LockExample {
+
+    private Lock lock = new ReentrantLock();
+
+    public void func() {
+        lock.lock();
+        try {
+            for (int i = 0; i < 10; i++) {
+                System.out.print(i + " ");
+            }
+        } finally {
+            lock.unlock(); // 确保释放锁，从而避免发生死锁。
+        }
+    }
+}
+```
+``` java
+public static void main(String[] args) {
+    LockExample lockExample = new LockExample();
+    ExecutorService executorService = Executors.newCachedThreadPool();
+    executorService.execute(() -> lockExample.func());
+    executorService.execute(() -> lockExample.func());
+}
+```
+``` java
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
+```
+#### 比较
+
+1.锁的实现
+
+synchronized 是 JVM 实现的，而 ReentrantLock 是 JDK 实现的。
+
+2.性能
+
+新版本 Java 对 synchronized 进行了很多优化，例如自旋锁等，synchronized 与 ReentrantLock 大致相同。
+
+3.等待可中断
+
+当持有锁的线程长期不释放锁的时候，正在等待的线程可以选择放弃等待，改为处理其他事情。
+
+ReentrantLock 可中断，而 synchronized 不行。
+
+4.公平锁
+
+公平锁是指多个线程在等待同一个锁时，必须按照申请锁的时间顺序来依次获得锁。
+
+synchronized 中的锁是非公平的，ReentrantLock 默认情况下也是非公平的，但是也可以是公平的。
+
+5.锁绑定多个条件
+
+一个 ReentrantLock 可以同时绑定多个 Condition 对象。
+
+### 使用选择
+
+除非需要使用 ReentrantLock 的高级功能，否则优先使用 synchronized。
+
+这是因为 synchronized 是 JVM 实现的一种锁机制，JVM 原生地支持它，而 ReentrantLock 不是所有的 JDK 版本都支持。并且使用 synchronized 不用担心没有释放锁而导致死锁问题，因为 JVM 会确保锁的释放。
+
+### 线程之间的协作
+
+当多个线程可以一起工作去解决某个问题时，如果某些部分必须在其它部分之前完成，那么就需要对线程进行协调。
+
+#### join()
+
+在线程中调用另一个线程的 join() 方法，会将当前线程挂起，而不是忙等待，直到目标线程结束。
+
+在线程中调用另一个线程的 join() 方法，会将当前线程挂起，而不是忙等待，直到目标线程结束。 
+
+对于以下代码，虽然 b 线程先启动，但是因为在 b 线程中调用了 a 线程的 join() 方法，b 线程会等待 a 线程结束才继续执行，因此最后能够保证 a 线程的输出先于 b 线程的输出。
+
+``` java
+public class JoinExample {
+
+    private class A extends Thread {
+        @Override
+        public void run() {
+            System.out.println("A");
+        }
+    }
+
+    private class B extends Thread {
+
+        private A a;
+
+        B(A a) {
+            this.a = a;
+        }
+
+        @Override
+        public void run() {
+            try {
+                a.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("B");
+        }
+    }
+
+    public void test() {
+        A a = new A();
+        B b = new B(a);
+        b.start();
+        a.start();
+    }
+}
+```
+``` java
+public static void main(String[] args) {
+    JoinExample example = new JoinExample();
+    example.test();
+}
+```
+``` java
+A
+B
+```
+
+#### wait() notify() notifyAll()
+
+调用 wait() 使得线程等待某个条件满足，线程在等待时会被挂起，当其他线程的运行使得这个条件满足时，其它线程会调用 notify() 或者 notifyAll() 来唤醒挂起的线程。 
+
+它们都属于 Object 的一部分，而不属于 Thread。 
+
+只能用在同步方法或者同步控制块中使用，否则会在运行时抛出 IllegalMonitorStateExeception。
+ 
+使用 wait() 挂起期间，线程会释放锁。这是因为，如果没有释放锁，那么其它线程就无法进入对象的同步方法或者同步控制块中，那么就无法执行 notify() 或者 notifyAll() 来唤醒挂起的线程，造成死锁。
+
+``` java
+public class WaitNotifyExample {
+    public synchronized void before() {
+        System.out.println("before");
+        notifyAll();
+    }
+
+    public synchronized void after() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("after");
+    }
+}
+```
+``` java
+public static void main(String[] args) {
+    ExecutorService executorService = Executors.newCachedThreadPool();
+    WaitNotifyExample example = new WaitNotifyExample();
+    executorService.execute(() -> example.after());
+    executorService.execute(() -> example.before());
+}
+```
+``` java
+before
+after
+```
+
+
+
+##### wait() 和 sleep() 的区别
+
+- wait() 是 Object 的方法，而 sleep() 是 Thread 的静态方法；
+  
+- wait() 会释放锁，sleep() 不会。
+
+- sleep使用interrupt()来唤醒,wait需要notify或者notifyAll来通知
+
+#### await() signal() signalAll()
+
+java.util.concurrent 类库中提供了 Condition 类来实现线程之间的协调，可以在 Condition 上调用 await() 方法使线程等待，
+其它线程调用 signal() 或 signalAll() 方法唤醒等待的线程。相比于 wait() 这种等待方式，await() 可以指定等待的条件，因此更加灵活
+
+使用 Lock 来获取一个 Condition 对象。
+
+``` java
+public class AwaitSignalExample {
+    private Lock lock = new ReentrantLock();
+    private Condition condition = lock.newCondition();
+
+    public void before() {
+        lock.lock();
+        try {
+            System.out.println("before");
+            condition.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void after() {
+        lock.lock();
+        try {
+            condition.await();
+            System.out.println("after");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+``` java
+public static void main(String[] args) {
+    ExecutorService executorService = Executors.newCachedThreadPool();
+    AwaitSignalExample example = new AwaitSignalExample();
+    executorService.execute(() -> example.after());
+    executorService.execute(() -> example.before());
+}
+```
+``` java
+before
+after
+```
+ 
