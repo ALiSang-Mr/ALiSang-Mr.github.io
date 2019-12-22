@@ -95,6 +95,12 @@ threadPoolKey：线程池名称，用于划分线程池。
 
 ## @HystrixProperty
 
+---
+
+## @EnableHystrixDashboard
+
+## @EnableTurbine
+
 
 
 
