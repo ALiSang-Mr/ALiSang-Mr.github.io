@@ -43,6 +43,12 @@ value注解的使用方式：@Value(value = “${user.userName}”)，这个时�
 
 ## @GetMapping
 
+## @PostMapping
+
+## @RequestBody
+
+## @RequestParam
+
 ## @PathVariable
 
 ## @Bean
@@ -55,11 +61,11 @@ value注解的使用方式：@Value(value = “${user.userName}”)，这个时�
 
 ---
 
-# Hystrix
+## Hystrix
 
-## @WebFilter
+### @WebFilter
 
-## @HystrixCommand
+### @HystrixCommand
 
 @HystrixCommand中的常用参数
 
@@ -69,21 +75,21 @@ commandKey：命令名称，用于区分不同的命令；
 groupKey：分组名称，Hystrix会根据不同的分组来统计命令的告警及仪表盘信息；
 threadPoolKey：线程池名称，用于划分线程池。
 
-## @EnableCircuitBreaker
+### @EnableCircuitBreaker
 
-## @CacheResult
+### @CacheResult
 
 @CacheResult：开启缓存，默认所有参数作为缓存的key，cacheKeyMethod可以通过返回String类型的方法指定key；
 
-## @CacheKey
+### @CacheKey
 
 @CacheKey：指定缓存的key，可以指定参数或指定参数中的属性值为缓存key，cacheKeyMethod还可以通过返回String类型的方法指定；
 
-## @CacheRemove
+### @CacheRemove
 
 @CacheRemove：移除缓存，需要指定commandKey。
 
-## @HystrixCollapser
+### @HystrixCollapser
 
 @HystrixCollapser的常用属性
 
@@ -93,13 +99,35 @@ threadPoolKey：线程池名称，用于划分线程池。
 
 - timerDelayInMilliseconds：collapserProperties中的属性，用于控制每隔多少时间合并一次请求；
 
-## @HystrixProperty
+### @HystrixProperty
 
 ---
 
-## @EnableHystrixDashboard
+### @EnableHystrixDashboard
 
-## @EnableTurbine
+### @EnableTurbine
+
+---
+
+## OpenFeign
+
+### @EnableFeignClients
+
+注解@EnableFeignClients:扫描和注册feign客户端bean定义
+
+### @FeignClient
+
+使用注解@FeignClient 定义feign客户端
+
+---
+
+## Zuul
+
+### @EnableZuulProxy
+
+
+
+
 
 
 
