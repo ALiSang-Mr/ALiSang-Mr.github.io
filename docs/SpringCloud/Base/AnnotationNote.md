@@ -41,6 +41,8 @@ value注解的使用方式：@Value(value = “${user.userName}”)，这个时�
 
 @Value将外部的值动态注入到Bean中
 
+## @RestController
+
 ## @GetMapping
 
 ## @PostMapping
@@ -124,6 +126,15 @@ threadPoolKey：线程池名称，用于划分线程池。
 ## Zuul
 
 ### @EnableZuulProxy
+
+
+## Config
+
+### @EnableConfigServer
+
+### @RefreshScope
+
+@RefreshScope注解用于刷新配置
 
 
 
