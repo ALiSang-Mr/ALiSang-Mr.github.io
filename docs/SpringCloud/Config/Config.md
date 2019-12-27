@@ -329,13 +329,13 @@ spring:
     config:
       server:
         git:
-          uri: https://gitee.com/macrozheng/springcloud-config.git
-          username: macro
-          password: 123456
+          uri: https://gitee.com/mwj2599/springcloud-config.git
+          username: alisang
+          password: ******
           clone-on-start: true #开启启动时直接从git获取配置
   security: #配置用户名和密码
     user:
-      name: macro
+      name: alisang
       password: 123456
 ```
 - 启动config-security-server服务。
@@ -361,8 +361,49 @@ spring:
 ```
 - 使用bootstrap-security.yml启动config-client服务；
 
-- 访问http://localhost:9002/configInfo进行测试，发现可以获取到配置信息。
+- 访问[http://localhost:9002/configInfo](http://localhost:9002/configInfo)进行测试，发现可以获取到配置信息。
 
 ``` yaml
 config info for dev(dev)
+```
+## config-sever集群搭建
+
+>在微服务架构中，所有服务都从配置中心获取配置，配置中心一旦宕机，会发生很严重的问题，下面我们搭建一个双节点的配置中心集群来解决该问题。
+
+- 启动两个config-server分别运行在8902和8903端口上；
+
+- 添加config-client的配置文件bootstrap-cluster.yml，主要是添加了从注册中心获取配置中心地址的配置并去除了配置中心uri的配置
+
+``` yaml
+spring:
+  cloud:
+    config:
+      profile: dev #启用环境名称
+      label: dev #分支名称
+      name: config #配置文件名称
+      discovery:
+        enabled: true
+        service-id: config-server
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8001/eureka/
+```
+- 以bootstrap-cluster.yml启动config-client服务，注册中心显示信息如下：
+
+![启动config-client服务](../img/config/config_007.png "启动config-client服务")
+
+- 访问http://localhost:9003/configInfo，发现config-client可以获取到配置信息。
+
+``` yaml
+config info for config dir dev(dev)
+```
+## 使用到的模块
+
+``` markdown
+springcloud-learning
+├── eureka-server -- eureka注册中心
+├── config-server -- 配置中心服务
+├── config-security-server -- 带安全认证的配置中心服务
+└── config-client -- 获取配置的客户端服务
 ```
