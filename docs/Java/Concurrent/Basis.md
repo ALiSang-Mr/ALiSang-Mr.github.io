@@ -7,7 +7,7 @@ Java 并发 - 理论基础
 
 ## 带着问题理解
 
-::: danger
+::: warning
 - 多线程的出现是要解决什么问题的？
 - 线程不安全是指什么？举例说明
 - 并发出现线程不安全的本质什么？可见性，原子性和有序性。
@@ -211,7 +211,7 @@ Java提供了volatile关键字来保证可见性。
 
 > Monitor Lock Rule
 
-一个 unlock 操作先行发生于后面对同一个锁的 lock 操作。
+一个 unlock(解锁) 操作先行发生于后面对同一个锁的 lock(加锁) 操作。
 
 ![管程锁定规则](../img/single-thread-rule.png "Monitor Lock Rule")
 

@@ -74,7 +74,7 @@ redis下载地址:也可以直接下载到服务器：`wget http://download.redi
 
 REDISPORT=6379
 case "$2" in
-    game)
+    1)
 	REDISPORT=6384
 	REDISPASS="Queke123!!!"
 	;;

@@ -51,3 +51,4 @@ First Cylinder是选择该分区的起始磁盘数，这里可自定义也可不
 
 ![设置重启自动挂载](../Linux/img/mount_006.jpg "设置重启自动挂载")
 
+`/dev/vdb1               /data                   ext4    defaults        0 0`
