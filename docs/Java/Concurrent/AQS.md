@@ -113,3 +113,4 @@ state会CAS减1。等到所有子线程都执行完后(即state=0)，会unpark()
 一般来说，自定义同步器要么是独占方法，要么是共享方式，他们也只需实现tryAcquire-tryRelease、tryAcquireShared-tryReleaseShared中的一种即可。
 
 但AQS也支持自定义同步器同时实现独占和共享两种方式，如ReentrantReadWriteLock。
+
