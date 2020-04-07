@@ -1,13 +1,11 @@
 JUC原子类: CAS, Unsafe和原子类详解
 
 >JUC中多数类是通过volatile和CAS来实现的，CAS本质上提供的是一种无锁方案，而Synchronized和Lock是互斥锁方案;
-> java原子类本质上使用的是CAS，而CAS底层是通过Unsafe类实现的。
+>java原子类本质上使用的是CAS，而CAS底层是通过Unsafe类实现的。
 
 [[TOC]]
 
-## 带着问题理解
-
-::: warning
+::: warning 带着问题理解
 - 线程安全的实现方法有哪些? 
 - 什么是CAS? CAS使用示例，结合AtomicInteger给出示例? 
 - CAS会有哪些问题? 针对这这些问题，Java提供了哪几个解决的? 

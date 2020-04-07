@@ -4,9 +4,7 @@
 
 [[TOC]]
 
-## 带着问题理解
-
-::: warning
+::: warning 带着问题理解
 - volatile关键字的作用是什么？
 - volatile能保证原子性吗?
 - 之前32位机器上共享的long和double变量的为什么要用volatile？现在64位机器上是否也要设置呢？

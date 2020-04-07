@@ -5,9 +5,7 @@
 
 [[TOC]]
 
-## 带着问题理解
-
-::: warning
+::: warning 带着问题理解
 - Synchronized可以作用在哪里？分别通过对象锁和类锁进行举例。
 - Synchronized本质上是通过什么保证线程安全的？分三个方面回答：加锁和释放锁的原理，可重入原理，保证可见性原理。
 - Synchronized由什么样的缺陷？ Java Lock是怎么弥补这些缺陷的。
