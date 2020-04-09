@@ -5,7 +5,7 @@
 
 [[TOC]]
 
-::: warning
+::: warning 带着问题理解
 - 为什么HashTable慢? 它的并发度是什么? 那么ConcurrentHashMap并发度是什么? 
 - ConcurrentHashMap在JDK1.7和JDK1.8中实现有什么差别? JDK1.8解決了JDK1.7中什么问题 
 - ConcurrentHashMap JDK1.7实现的原理是什么? 
