@@ -45,9 +45,6 @@ BlockingQueue 通常用于一个线程生产对象，而另外一个线程消费
 - 超时: 如果试图的操作无法立即执行，该方法调用将会发生阻塞，直到能够执行，但等待时间不会超过给定值。
 返回一个特定值以告知该操作是否成功(典型的是 true / false)。
 
-著作权归https://www.pdai.tech所有。
-链接：https://www.pdai.tech/md/java/thread/java-thread-x-juc-collection-BlockingQueue.html
-
 无法向一个 BlockingQueue 中插入 null。如果你试图插入 null，BlockingQueue 将会抛出一个 NullPointerException。
 可以访问到 BlockingQueue 中的所有元素，而不仅仅是开始和结束的元素。比如说，你将一个对象放入队列之中以等待处理，
 但你的应用想要将其取消掉。那么你可以调用诸如 remove(o) 方法来将队列之中的特定对象进行移除。
