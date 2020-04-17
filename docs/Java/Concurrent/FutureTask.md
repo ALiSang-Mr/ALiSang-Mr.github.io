@@ -63,3 +63,137 @@ public interface Callable<V> {
     V call() throws Exception;
 }
 ```
+### Future接口
+
+Future接口代表异步计算的结果，通过Future接口提供的方法可以查看异步计算是否执行完成，或者等待执行结果并获取执行结果，
+同时还可以取消执行。Future接口的定义如下:
+
+``` java
+public interface Future<V> {
+    boolean cancel(boolean mayInterruptIfRunning);
+    boolean isCancelled();
+    boolean isDone();
+    V get() throws InterruptedException, ExecutionException;
+    V get(long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException;
+}
+```
+**cancel()**:cancel()方法用来取消异步任务的执行。如果异步任务已经完成或者已经被取消，或者由于某些原因不能取消，
+则会返回false。如果任务还没有被执行，则会返回true并且异步任务不会被执行。如果任务已经开始执行了但是还没有执行完成，
+若mayInterruptIfRunning为true，则会立即中断执行任务的线程并返回true，若mayInterruptIfRunning为false，
+则会返回true且不会中断任务执行线程。
+**isCanceled()**:判断任务是否被取消，如果任务在结束(正常执行结束或者执行异常结束)前被取消则返回true，否则返回false。
+**isDone()**:判断任务是否已经完成，如果完成则返回true，否则返回false。需要注意的是：任务执行过程中发生异常、
+任务被取消也属于任务已完成，也会返回true。
+**get()**:获取任务执行结果，如果任务还没完成则会阻塞等待直到任务执行完成。如果任务被取消则会抛出CancellationException异常，
+如果任务执行过程发生异常则会抛出ExecutionException异常，如果阻塞等待过程中被中断则会抛出InterruptedException异常。
+**get(long timeout,Timeunit unit)**:带超时时间的get()版本，如果阻塞等待过程中超时则会抛出TimeoutException异常。
+
+### 核心属性
+
+``` java
+//内部持有的callable任务，运行完毕后置空
+private Callable<V> callable;
+
+//从get()中返回的结果或抛出的异常
+private Object outcome; // non-volatile, protected by state reads/writes
+
+//运行callable的线程
+private volatile Thread runner;
+
+//使用Treiber栈保存等待线程
+private volatile WaitNode waiters;
+
+//任务状态
+private volatile int state;
+private static final int NEW          = 0;
+private static final int COMPLETING   = 1;
+private static final int NORMAL       = 2;
+private static final int EXCEPTIONAL  = 3;
+private static final int CANCELLED    = 4;
+private static final int INTERRUPTING = 5;
+private static final int INTERRUPTED  = 6;
+```
+**其中需要注意的是state是volatile类型的，也就是说只要有任何一个线程修改了这个变量，那么其他所有的线程都会知道最新的值**。7种状态具体表示：
+
+**NEW**:表示是个新的任务或者还没被执行完的任务。这是初始状态。
+**COMPLETING**:任务已经执行完成或者执行任务的时候发生异常，但是任务执行结果或者异常原因还没有保存到outcome字段
+(outcome字段用来保存任务执行结果，如果发生异常，则用来保存异常原因)的时候，状态会从NEW变更到COMPLETING。
+但是这个状态会时间会比较短，属于中间状态。 
+**NORMAL**:任务已经执行完成并且任务执行结果已经保存到outcome字段，状态会从COMPLETING转换到NORMAL。这是一个最终态。 
+**EXCEPTIONAL**:任务执行发生异常并且异常原因已经保存到outcome字段中后，状态会从COMPLETING转换到EXCEPTIONAL。
+这是一个最终态。 CANCELLED:任务还没开始执行或者已经开始执行但是还没有执行完成的时候，用户调用了cancel(false)方法
+取消任务且不中断任务执行线程，这个时候状态会从NEW转化为CANCELLED状态。这是一个最终态。 
+**INTERRUPTING**: 任务还没开始执行或者已经执行但是还没有执行完成的时候，用户调用了cancel(true)方法取消任务并且要中断
+任务执行线程但是还没有中断任务执行线程之前，状态会从NEW转化为INTERRUPTING。这是一个中间状态。 
+**INTERRUPTED**:调用interrupt()中断任务执行线程之后状态会从INTERRUPTING转换到INTERRUPTED。这是一个最终态。
+有一点需要注意的是，所有值大于COMPLETING的状态都表示任务已经执行完成(任务正常执行完成，任务执行异常或者任务被取消)。 
+
+各个状态之间的可能转换关系如下图所示:
+
+![各个状态之间的可能转换关系](../img/futureTask_002.png "各个状态之间的可能转换关系")
+
+
+## FutureTask示例
+
+常用使用方式：
+
+- 第一种方式:Future + ExecutorService
+- 第二种方式: FutureTask + ExecutorService
+- 第三种方式:FutureTask + Thread
+
+### Future使用示例
+
+``` java
+public class MyFutureDemo {
+
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        ExecutorService pool = Executors.newCachedThreadPool();
+        Future<String> future = pool.submit(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                System.err.println("callable execute ...");
+                Thread.sleep(5000);
+                return "done";
+            }
+        });
+
+        System.err.println("execute something in main ...");
+        Thread.sleep(1000);
+        System.err.println("future is done ? {}" + future.isDone());
+        System.err.println("cancle: {}" + future.cancel(true));
+        System.err.println("result: {}" + future.get());
+        System.err.println("future is done ? {}" + future.isDone());
+        System.err.println("pool is Shutdown ? {}" + pool.isShutdown());
+        pool.shutdown();
+
+    }
+}
+```
+### FutureTask使用示例
+
+``` java
+public class MyFutureTaskDemo {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        ExecutorService threadPool = Executors.newCachedThreadPool();
+        FutureTask<String> futureTask = new FutureTask<String>(new Callable() {
+            @Override
+            public Object call() throws Exception {
+                System.err.println("callable execute ...");
+                Thread.sleep(5000);
+                return "done";
+            }
+        });
+
+        threadPool.submit(futureTask);
+        System.err.println("execute something in main ...");
+        Thread.sleep(1000);
+        System.err.println("future is done ? {}" + futureTask.isDone());
+        System.err.println("result: {}" + futureTask.get());
+        System.err.println("future is done ? {}" + futureTask.isDone());
+    }
+}
+```
+
+
+

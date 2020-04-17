@@ -31,5 +31,7 @@
 
 Java是如何实现和管理线程池的? 从JDK 5开始，把工作单元与执行机制分离开来，工作单元包括Runnable和Callable，而执行机制由Executor框架提供。
 
+[https://tech.meituan.com/2020/04/02/java-pooling-pratice-in-meituan.html]
+
 
 
