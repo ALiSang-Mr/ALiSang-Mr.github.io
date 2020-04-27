@@ -521,12 +521,220 @@ ORDER BY 语句使用索引最左前列
 
 使用Where子句与Order By子句条件列组合满足索引最左前列
 
+MySql两种排序方式：文件排序或扫描有序索引排序
+MySql能为排序与查询使用相同的索引
 
+order by 能使用索引最左前缀
 
+- ORDER BY a
 
+- ORDER BY a,b
 
+- ORDER BY a,b,c
 
+- ORDER BY a DESC, b DESC, c DESC
 
+如果where使用索引的最左前缀定义为常量，则order by能使用索引
+
+- WHERE a = const ORDER BY b,c
+
+- WHERE a = const AND b = const ORDER BY c
+
+- WHERE a = const ORDER BY b,c
+
+- WHERE a = const AND b > const ORDER BY b,c
+
+不能使用索引进行排序
+
+-ORDER BY a AEC，b DESC，c DESC  排序不一致
+
+- WHERE g=const ORDER BY b，c    丢失a索引
+
+- WHERE a=const ORDER BY c       丢失b索引
+
+- WHERE a=const ORDER BY a,d     d不是索引的一部分
+
+### GROUP BY
+
+group by 实质是先排序后进行分组，遵照索引建的的最佳左前缀
+
+当无法使用索引列，增大max_length_for_sort_data参数的设置+增大sort_buffer_size参数的设置
+
+where高于having，能写在where限定的条件就不要去having限定了
+
+## 慢查询日志
+
+### 概念
+
+MySQL的慢查询日志是MySQL提供的一种日志记录，它用来记录在MySQL中响应时间超过阀值的语句，
+具体指运行时间超过long_query_time值的SQL，则会被记录到慢查询日志中。
+
+long_query_time的默认值为10，意思是运行10S以上的语句。默认情况下，Mysql数据库并不启动慢查询日志，需要我们手动来设置这个参数，当然，如果不是调优需要的话，一般不建议启动该参数，因为开启慢查询日志会或多或少带来一定的性能影响。
+慢查询日志支持将日志记录写入文件，也支持将日志记录写入数据库表。
+
+### 相关参数
+
+**MySQL 慢查询的相关参数解释**：slow_query_log ：是否开启慢查询日志，1表示开启，0表示关闭。
+
+``` sql
+slow_query_log    ：是否开启慢查询日志，1表示开启，0表示关闭。
+
+log-slow-queries  ：旧版（5.6以下版本）MySQL数据库慢查询日志存储路径。可以不设置该参数，系统则会默认给一个缺省的文件host_name-slow.log
+
+slow-query-log-file：新版（5.6及以上版本）MySQL数据库慢查询日志存储路径。可以不设置该参数，系统则会默认给一个缺省的文件host_name-slow.log
+
+long_query_time ：慢查询阈值，当查询时间多于设定的阈值时，记录日志。
+
+log_queries_not_using_indexes：未使用索引的查询也被记录到慢查询日志中（可选项）。
+
+log_output：日志存储方式。log_output='FILE'表示将日志存入文件，默认值是'FILE'。log_output='TABLE'表示将日志存入数据库，
+这样日志信息就会被写入到mysql.slow_log表中。MySQL数据<br>库支持同时两种日志存储方式，配置的时候以逗号隔开即可，如：log_output='FILE,TABLE'。
+日志记录到系统的专用日志表中，要比记录到文件耗费更多的系统资源，因此对于需要启用慢查询日志，又需要能够获得更高的系统性能，那么建议优先记录到文件。
+```
+### 配置
+
+默认情况下slow_query_log的值为OFF，表示慢查询日志是禁用的，可以通过设置slow_query_log的值来开启，如下所示：
+
+- 查看是否开启慢查询日志
+``` sql
+show variables like '%slow_query_log%';
+```
+- 设置是否开启慢查询日志
+``` sql
+set global slow_query_log=1;
+```
+
+使用set global slow_query_log=1开启了慢查询日志只对当前数据库生效，MySQL重启后则会失效。如果要永久生效，就必须修改配置文件my.cnf（其它系统变量也是如此）
+
+- 设置永久开启慢查询日志
+
+修改my.cnf文件，增加或修改参数slow_query_log 和slow_query_log_file后，然后重启MySQL服务器，如下所示:
+
+``` properties
+slow_query_log =1
+slow_query_log_file=/usr/local/mysql/data/localhost-slow.log
+long_query_time=3
+```
+慢查询的参数slow_query_log_file ，它指定慢查询日志文件的存放路径，系统默认会给一个缺省的文件host_name-slow.log
+
+- 查询时间大于long_query_time的会被记录到慢查询日志中
+
+从MySQL 5.1开始，long_query_time开始以微秒记录SQL语句运行时间，之前仅用秒为单位记录。如果记录到表里面，只会记录整数部分，不会记录微秒部分。
+
+查看long_query_time的时间设置
+
+``` sql
+show variables like 'long_query_time';
+```
+
+设置long_query_time的时间
+
+``` sql
+set global long_query_time=4;
+```
+
+不用重新连接会话,查看long_query_time的时间设置
+
+``` sql
+show global variables like 'long_query_time';
+```
+
+- log_output 参数是指定日志的存储方式。
+
+log_output='FILE'表示将日志存入文件，默认值是'FILE'。log_output='TABLE'表示将日志存入数据库，这样日志信息就会被写入到mysql.slow_log表中。
+MySQL数据库支持同时两种日志存储方式，配置的时候以逗号隔开即可，如：log_output='FILE,TABLE'。日志记录到系统的专用日志表中，
+要比记录到文件耗费更多的系统资源，因此对于需要启用慢查询日志，又需要能够获得更高的系统性能，那么建议优先记录到文件.
+
+``` sql
+show variables like '%log_output%';
+```
+
+- 未使用索引的查询也被记录到慢查询日志中
+
+系统变量log-queries-not-using-indexes：未使用索引的查询也被记录到慢查询日志中（可选项）。如果调优的话，建议开启这个选项。另外，
+开启了这个参数，其实使用full index scan的sql也会被记录到慢查询日志。
+
+查看
+
+``` sql
+show variables like 'log_queries_not_using_indexes';
+```
+
+设置
+
+``` sql
+set global log_queries_not_using_indexes=1;
+```
+
+- log_slow_admin_statements
+
+系统变量log_slow_admin_statements表示是否将慢管理语句例如ANALYZE TABLE和ALTER TABLE等记入慢查询日志
+
+``` sql
+show variables like 'log_slow_admin_statements';
+```
+
+- 查询有多少条慢查询记录
+
+``` sql
+show global status like '%slow_queries%';
+```
+
+### 日志分析工具mysqldumpslow
+
+在实际生产环境中，如果要手工分析日志，查找、分析SQL，显然是个体力活，MySQL提供了日志分析工具mysqldumpslow
+
+>-s, 是表示按照何种方式排序
+
+>   c: 访问计数
+
+>    l: 锁定时间
+
+>    r: 返回记录
+
+>    t: 查询时间
+
+>    al:平均锁定时间
+
+>    ar:平均返回记录数
+
+>    at:平均查询时间
+
+>-t, 是top n的意思，即为返回前面多少条的数据；
+
+>-g, 后边可以写一个正则匹配模式，大小写不敏感的；
+
+ 
+
+比如:
+
+得到返回记录集最多的10个SQL。
+
+``` text
+mysqldumpslow -s r -t 10 /database/mysql/mysql06_slow.log
+```
+
+得到访问次数最多的10个SQL
+
+``` text
+mysqldumpslow -s c -t 10 /database/mysql/mysql06_slow.log
+```
+
+得到按照时间排序的前10条里面含有左连接的查询语句。
+
+``` text
+mysqldumpslow -s t -t 10 -g “left join” /database/mysql/mysql06_slow.log
+```
+ 
+另外建议在使用这些命令时结合 | 和more 使用 ，否则有可能出现刷屏的情况。
+
+``` text
+mysqldumpslow -s r -t 20 /mysqldata/mysql/mysql06-slow.log | more
+```
+
+## 批量插入数据脚本
+
+## Show Profile
 
 
 
