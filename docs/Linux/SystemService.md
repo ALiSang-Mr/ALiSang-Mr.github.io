@@ -288,7 +288,9 @@ systemd─┬─NetworkManager─┬─dhclient
         └─zabbix_server───33*[zabbix_server]
 ```
 ### ps：
+
 ps其实只需掌握少数几个选项即可，关键的是要了解ps显示出的进程信息中每一列代表什么属性
+
 **常用用法：**
 ``` markdown
 ~]# ps aux           
@@ -445,5 +447,22 @@ htop界面比top更加美观，并且htop可以直接使用鼠标来点击进行
 **常用用法：**
 ``` shell script
  htop  
+```
+![htop](../Linux/img/system_service_001.png "htop")
+- 第一部分：略
+- 第二部分：略
+- 第三部分：略
+- 第四部分：
+``` markdown
+F1：查看htop帮助手册
+F2：htop界面设置
+F3：按F3或直接输入”/”就可以直接进入搜索模式，是按照进程名进行搜索的
+F4：相当于模糊查找，不区分大小写，下方输入要搜索的内容后，则界面只显示搜索到的内容，更加方便查看
+F5：以树形方式显示
+F6：按下F6后会跳转至上图界面，让您选择以什么方式进行排序,在Sort by下选择您要以什么来排序
+F7：调小进程nice值（使用鼠标选中某个进程）
+F8：调大进程nice值
+F9：杀死进程
+F10：退出htop
 ```
 

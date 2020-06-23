@@ -1,6 +1,6 @@
 # Linux 常用工具命令
 
-## rz、sz 
+## rz、sz 上传下载
 
 >yum安装
 
