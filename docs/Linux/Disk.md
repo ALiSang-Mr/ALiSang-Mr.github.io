@@ -44,6 +44,9 @@ tmpfs                   tmpfs     1.9G     0  1.9G   0% /dev/shm
 ``` shell script
 du -h --max-depth=1 ./*
 ```
+``` shell script
+du -s -h ./*
+```
 
 ## iostat：
 iostat主要统计磁盘或分区的整体使用情况
