@@ -647,3 +647,212 @@ hashCode()与equals()的相关规定
 
 hashCode() 的默认行为是对堆上的对象产生独特值。如果没有重写 hashCode()，则该 class 的两个对象无论如何都不会相等（即使这两个对象指向相同的数据）
 
+### toString()
+
+默认返回 ToStringExample@4554617c 这种形式，其中 @ 后面的数值为散列码的无符号十六进制表示。
+
+### clone()
+1.**cloneable**
+
+clone() 是 Object 的 protected 方法，它不是 public，一个类不显式去重写 clone()，其它类就不能直接去调用该类实例的 clone() 方法。
+``` java
+public class CloneExample {
+    private int a;
+    private int b;
+}
+```
+``` java
+CloneExample e1 = new CloneExample();
+// CloneExample e2 = e1.clone(); // 'clone()' has protected access in 'java.lang.Object'
+```
+重写 clone() 得到以下实现:
+``` java
+public class CloneExample {
+    private int a;
+    private int b;
+
+    @Override
+    protected CloneExample clone() throws CloneNotSupportedException {
+        return (CloneExample)super.clone();
+    }
+}
+```
+``` java
+CloneExample e1 = new CloneExample();
+try {
+    CloneExample e2 = e1.clone();
+} catch (CloneNotSupportedException e) {
+    e.printStackTrace();
+}
+```
+``` java
+java.lang.CloneNotSupportedException: CloneExample
+```
+以上抛出了 CloneNotSupportedException，这是因为 CloneExample 没有实现 Cloneable 接口。
+
+应该注意的是，clone() 方法并不是 Cloneable 接口的方法，而是 Object 的一个 protected 方法。Cloneable 接口只是规定，如果一个类没有实现 Cloneable
+ 接口又调用了 clone() 方法，就会抛出 CloneNotSupportedException。
+``` java
+public class CloneExample implements Cloneable {
+    private int a;
+    private int b;
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+}
+```
+2. **浅拷贝**
+拷贝对象和原始对象的引用类型引用同一个对象。
+
+3. **深拷贝**
+拷贝对象和原始对象的引用类型引用不同对象。
+
+4. **clone() 的替代方案**
+使用 clone() 方法来拷贝一个对象即复杂又有风险，它会抛出异常，并且还需要类型转换。Effective Java 书上讲到，最好不要去使用 clone()，
+可以使用拷贝构造函数或者拷贝工厂来拷贝一个对象。
+
+## 关键字
+### final
+
+**1. 数据**
+
+声明数据为常量，可以是编译时常量，也可以是在运行时被初始化后不能被改变的常量。
+- 对于基本类型，final 使数值不变；
+- 对于引用类型，final 使引用不变，也就不能引用其它对象，但是被引用的对象本身是可以修改的。
+
+``` java
+final int x = 1;
+// x = 2;  // cannot assign value to final variable 'x'
+final A y = new A();
+y.a = 1;
+```
+**2. 方法**
+
+声明方法不能被子类重写。
+
+private 方法隐式地被指定为 final，如果在子类中定义的方法和基类中的一个 private 方法签名相同，此时子类的方法不是重写基类方法，而是在子类中定义了一个新的方法。
+
+**3. 类**
+
+声明类不允许被继承。
+
+### static
+
+**1. 静态变量**
+- 静态变量: 又称为类变量，也就是说这个变量属于类的，类所有的实例都共享静态变量，可以直接通过类名来访问它；静态变量在内存中只存在一份。
+- 实例变量: 每创建一个实例就会产生一个实例变量，它与该实例同生共死。
+
+**2. 静态方法**
+静态方法在类加载的时候就存在了，它不依赖于任何实例。所以静态方法必须有实现，也就是说它不能是抽象方法(abstract)。
+``` java
+public abstract class A {
+    public static void func1(){
+    }
+    // public abstract static void func2();  // Illegal combination of modifiers: 'abstract' and 'static'
+}
+```
+只能访问所属类的静态字段和静态方法，方法中不能有 this 和 super 关键字。
+``` java
+public class A {
+    private static int x;
+    private int y;
+
+    public static void func1(){
+        int a = x;
+        // int b = y;  // Non-static field 'y' cannot be referenced from a static context
+        // int b = this.y;     // 'A.this' cannot be referenced from a static context
+    }
+}
+```
+**3. 静态语句块**
+静态语句块在类初始化时运行一次。
+``` java
+public class A {
+    static {
+        System.out.println("123");
+    }
+
+    public static void main(String[] args) {
+        A a1 = new A();
+        A a2 = new A();
+    }
+}
+```
+``` java
+123
+```
+**4. 静态内部类**
+非静态内部类依赖于外部类的实例，而静态内部类不需要。
+``` java
+public class OuterClass {
+    class InnerClass {
+    }
+
+    static class StaticInnerClass {
+    }
+
+    public static void main(String[] args) {
+        // InnerClass innerClass = new InnerClass(); // 'OuterClass.this' cannot be referenced from a static context
+        OuterClass outerClass = new OuterClass();
+        InnerClass innerClass = outerClass.new InnerClass();
+        StaticInnerClass staticInnerClass = new StaticInnerClass();
+    }
+}
+```
+静态内部类不能访问外部类的非静态的变量和方法。
+**5. 静态导包**
+在使用静态变量和方法时不用再指明 ClassName，从而简化代码，但可读性大大降低。
+``` java
+import static com.xxx.ClassName.*
+```
+**6. 初始化顺序**
+静态变量和静态语句块优先于实例变量和普通语句块，静态变量和静态语句块的初始化顺序取决于它们在代码中的顺序。
+``` java
+public static String staticField = "静态变量";
+```
+``` java
+static {
+    System.out.println("静态语句块");
+}
+```
+``` java
+public String field = "实例变量";
+```
+``` java
+{
+    System.out.println("普通语句块");
+}
+```
+最后才是构造函数的初始化。
+``` java
+public InitialOrderTest() {
+    System.out.println("构造函数");
+}
+```
+存在继承的情况下，初始化顺序为:
+
+- 父类(静态变量、静态语句块)
+- 子类(静态变量、静态语句块)
+- 父类(实例变量、普通语句块)
+- 父类(构造函数)
+- 子类(实例变量、普通语句块)
+- 子类(构造函数)
+
+## 反射
+
+每个类都有一个  Class  对象，包含了与类有关的信息。当编译一个新类时，会产生一个同名的 .class 文件，该文件内容保存着 Class 对象。 
+
+类加载相当于 Class 对象的加载。类在第一次使用时才动态加载到 JVM 中，可以使用 Class.forName("com.mysql.jdbc.Driver") 这种方式来控制类的加载，
+该方法会返回一个 Class 对象。 
+
+反射可以提供运行时的类信息，并且这个类可以在运行时才加载进来，甚至在编译时期该类的 .class 不存在也可以加载进来。 
+
+Class 和 java.lang.reflect 一起对反射提供了支持，java.lang.reflect 类库主要包含了以下三个类: 
+
+- **Field**: 可以使用 get() 和 set() 方法读取和修改 Field 对象关联的字段；
+- **Method** : 可以使用 invoke() 方法调用与 Method 对象关联的方法；
+- **Constructor** : 可以用 Constructor 创建新的对象。
+
+[反射机制详解](Reflect.md)
