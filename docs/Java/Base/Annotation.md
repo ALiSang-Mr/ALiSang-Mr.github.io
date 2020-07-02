@@ -439,7 +439,7 @@ Annotation in Method 'public java.lang.String com.pdai.java.annotation.TestMetho
 toStringMethod
 ```
 ## 深入理解注解
-Java8提供了哪些新的注解？
+### Java8提供了哪些新的注解？
 - `@Repeatable`
 请参考Java 8 - 重复注解
 - `ElementType.TYPE_USE`
@@ -481,3 +481,355 @@ public class TypeParameterAndTypeUseAnnotation<@MyNotEmpty T>{
 >注解是不支持继承的
 
 不能使用关键字extends来继承某个@interface，但注解在编译后，编译器会自动继承java.lang.annotation.Annotation接口.
+
+虽然反编译后发现注解继承了Annotation接口，请记住，即使Java的接口可以实现多继承，但定义注解时依然无法使用extends关键字继承@interface。
+
+区别于注解的继承，被注解的子类继承父类注解可以用@Inherited： 如果某个类使用了被@Inherited修饰的Annotation，则其子类将自动具有该注解。
+
+### 注解实现的原理？
+>网上很多标注解的原理文章根本没有说到点子上。
+推荐两篇文章：
+- [https://blog.csdn.net/qq_20009015/article/details/106038023](https://blog.csdn.net/qq_20009015/article/details/106038023)
+- [https://www.race604.com/annotation-processing/](https://www.race604.com/annotation-processing/)
+
+## 注解的应用场景
+###  配置化到注解化 - 框架的演进
+
+Spring 框架 配置化到注解化的转变。
+
+### 继承实现到注解实现 - Junit3到Junit4
+>一个模块的封装大多数人都是通过继承和组合等模式来实现的，但是如果结合注解将可以极大程度提高实现的优雅度（降低耦合度）。而Junit3 到Junit4的演化就是最好的一个例子。
+
+- 被测试类
+``` java
+public class HelloWorld {
+ 	
+ 	public void sayHello(){
+ 		System.out.println("hello....");
+ 		throw new NumberFormatException();
+ 	}
+ 	
+ 	public void sayWorld(){
+ 		System.out.println("world....");
+ 	}
+ 	
+ 	public String say(){
+ 		return "hello world!";
+ 	}
+ 	
+}
+```
+- Junit 3 实现UT
+通过继承 TestCase来实现，初始化是通过Override父类方法来进行，测试方式通过test的前缀方法获取。
+``` java
+public class HelloWorldTest extends TestCase{
+ 	private HelloWorld hw;
+ 	
+ 	@Override
+ 	protected void setUp() throws Exception {
+ 		super.setUp();
+ 		hw=new HelloWorld();
+ 	}
+ 	
+ 	//1.测试没有返回值
+ 	public void testHello(){
+ 		try {
+ 			hw.sayHello();
+ 		} catch (Exception e) {
+ 			System.out.println("发生异常.....");
+ 		}
+ 		
+ 	}
+ 	public void testWorld(){
+ 		hw.sayWorld();
+ 	}
+ 	//2.测试有返回值的方法
+ 	// 返回字符串
+ 	public void testSay(){
+ 		assertEquals("测试失败", hw.say(), "hello world!");
+ 	}
+ 	//返回对象
+ 	public void testObj(){
+ 		assertNull("测试对象不为空", null);
+ 		assertNotNull("测试对象为空",new String());
+ 	}
+ 	@Override
+ 	protected void tearDown() throws Exception {
+ 		super.tearDown();
+ 		hw=null;
+ 	}	
+}
+```
+- Junit 4 实现UT
+通过定义@Before，@Test，@After等等注解来实现。
+``` java
+public class HelloWorldTest {
+ 	private HelloWorld hw;
+ 
+ 	@Before
+ 	public void setUp() {
+ 		hw = new HelloWorld();
+ 	}
+ 
+ 	@Test(expected=NumberFormatException.class)
+ 	// 1.测试没有返回值,有别于junit3的使用，更加方便
+ 	public void testHello() {
+ 		hw.sayHello();
+ 	}
+ 	@Test
+ 	public void testWorld() {
+ 		hw.sayWorld();
+ 	}
+ 	
+ 	@Test
+ 	// 2.测试有返回值的方法
+ 	// 返回字符串
+ 	public void testSay() {
+ 		assertEquals("测试失败", hw.say(), "hello world!");
+ 	}
+ 	
+ 	@Test
+ 	// 返回对象
+ 	public void testObj() {
+ 		assertNull("测试对象不为空", null);
+ 		assertNotNull("测试对象为空", new String());
+ 	}
+ 
+ 	@After
+ 	public void tearDown() throws Exception {
+ 		hw = null;
+ 	}
+ 
+}
+```
+这里我们发现通过注解的方式，我们实现单元测试时将更为优雅。如果你还期望了解Junit4是如何实现运行的呢？可以看这篇文章：[JUnit4源码分析运行原理](https://blog.csdn.net/weixin_34043301/article/details/91799261) 。
+
+### 自定义注解和AOP - 通过切面实现解耦
+>最为常见的就是使用Spring AOP切面实现**统一的操作日志管理**，我这里找了一个开源项目中的例子（只展示主要代码），给你展示下如何通过注解实现解耦的。
+
+- 自定义Log注解
+``` java
+@Target({ ElementType.PARAMETER, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Log {
+    /**
+     * 模块 
+     */
+    public String title() default "";
+
+    /**
+     * 功能
+     */
+    public BusinessType businessType() default BusinessType.OTHER;
+
+    /**
+     * 操作人类别
+     */
+    public OperatorType operatorType() default OperatorType.MANAGE;
+
+    /**
+     * 是否保存请求的参数
+     */
+    public boolean isSaveRequestData() default true;
+}
+```
+- 实现日志的切面, 对自定义注解Log作切点进行拦截
+即对注解了@Log的方法进行切点拦截，
+``` java
+@Aspect
+@Component
+public class LogAspect {
+    private static final Logger log = LoggerFactory.getLogger(LogAspect.class);
+
+    /**
+     * 配置织入点 - 自定义注解的包路径
+     * 
+     */
+    @Pointcut("@annotation(com.xxx.aspectj.lang.annotation.Log)")
+    public void logPointCut() {
+    }
+
+    /**
+     * 处理完请求后执行
+     *
+     * @param joinPoint 切点
+     */
+    @AfterReturning(pointcut = "logPointCut()", returning = "jsonResult")
+    public void doAfterReturning(JoinPoint joinPoint, Object jsonResult) {
+        handleLog(joinPoint, null, jsonResult);
+    }
+
+    /**
+     * 拦截异常操作
+     * 
+     * @param joinPoint 切点
+     * @param e 异常
+     */
+    @AfterThrowing(value = "logPointCut()", throwing = "e")
+    public void doAfterThrowing(JoinPoint joinPoint, Exception e) {
+        handleLog(joinPoint, e, null);
+    }
+
+    protected void handleLog(final JoinPoint joinPoint, final Exception e, Object jsonResult) {
+        try {
+            // 获得注解
+            Log controllerLog = getAnnotationLog(joinPoint);
+            if (controllerLog == null) {
+                return;
+            }
+
+            // 获取当前的用户
+            User currentUser = ShiroUtils.getSysUser();
+
+            // *========数据库日志=========*//
+            OperLog operLog = new OperLog();
+            operLog.setStatus(BusinessStatus.SUCCESS.ordinal());
+            // 请求的地址
+            String ip = ShiroUtils.getIp();
+            operLog.setOperIp(ip);
+            // 返回参数
+            operLog.setJsonResult(JSONObject.toJSONString(jsonResult));
+
+            operLog.setOperUrl(ServletUtils.getRequest().getRequestURI());
+            if (currentUser != null) {
+                operLog.setOperName(currentUser.getLoginName());
+                if (StringUtils.isNotNull(currentUser.getDept())
+                        && StringUtils.isNotEmpty(currentUser.getDept().getDeptName())) {
+                    operLog.setDeptName(currentUser.getDept().getDeptName());
+                }
+            }
+
+            if (e != null) {
+                operLog.setStatus(BusinessStatus.FAIL.ordinal());
+                operLog.setErrorMsg(StringUtils.substring(e.getMessage(), 0, 2000));
+            }
+            // 设置方法名称
+            String className = joinPoint.getTarget().getClass().getName();
+            String methodName = joinPoint.getSignature().getName();
+            operLog.setMethod(className + "." + methodName + "()");
+            // 设置请求方式
+            operLog.setRequestMethod(ServletUtils.getRequest().getMethod());
+            // 处理设置注解上的参数
+            getControllerMethodDescription(controllerLog, operLog);
+            // 保存数据库
+            AsyncManager.me().execute(AsyncFactory.recordOper(operLog));
+        } catch (Exception exp) {
+            // 记录本地异常日志
+            log.error("==前置通知异常==");
+            log.error("异常信息:{}", exp.getMessage());
+            exp.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取注解中对方法的描述信息 用于Controller层注解
+     * 
+     * @param log 日志
+     * @param operLog 操作日志
+     * @throws Exception
+     */
+    public void getControllerMethodDescription(Log log, OperLog operLog) throws Exception {
+        // 设置action动作
+        operLog.setBusinessType(log.businessType().ordinal());
+        // 设置标题
+        operLog.setTitle(log.title());
+        // 设置操作人类别
+        operLog.setOperatorType(log.operatorType().ordinal());
+        // 是否需要保存request，参数和值
+        if (log.isSaveRequestData()) {
+            // 获取参数的信息，传入到数据库中。
+            setRequestValue(operLog);
+        }
+    }
+
+    /**
+     * 获取请求的参数，放到log中
+     * 
+     * @param operLog
+     * @param request
+     */
+    private void setRequestValue(OperLog operLog) {
+        Map<String, String[]> map = ServletUtils.getRequest().getParameterMap();
+        String params = JSONObject.toJSONString(map);
+        operLog.setOperParam(StringUtils.substring(params, 0, 2000));
+    }
+
+    /**
+     * 是否存在注解，如果存在就获取
+     */
+    private Log getAnnotationLog(JoinPoint joinPoint) throws Exception {
+        Signature signature = joinPoint.getSignature();
+        MethodSignature methodSignature = (MethodSignature) signature;
+        Method method = methodSignature.getMethod();
+
+        if (method != null)
+        {
+            return method.getAnnotation(Log.class);
+        }
+        return null;
+    }
+}
+```
+- 使用@Log注解
+以一个简单的CRUD操作为例, 这里展示部分代码：每对“部门”进行操作就会产生一条操作日志存入数据库。
+``` java
+@Controller
+@RequestMapping("/system/dept")
+public class DeptController extends BaseController {
+    private String prefix = "system/dept";
+
+    @Autowired
+    private IDeptService deptService;
+    
+    /**
+     * 新增保存部门
+     */
+    @Log(title = "部门管理", businessType = BusinessType.INSERT)
+    @RequiresPermissions("system:dept:add")
+    @PostMapping("/add")
+    @ResponseBody
+    public AjaxResult addSave(@Validated Dept dept) {
+        if (UserConstants.DEPT_NAME_NOT_UNIQUE.equals(deptService.checkDeptNameUnique(dept))) {
+            return error("新增部门'" + dept.getDeptName() + "'失败，部门名称已存在");
+        }
+        return toAjax(deptService.insertDept(dept));
+    }
+
+    /**
+     * 保存
+     */
+    @Log(title = "部门管理", businessType = BusinessType.UPDATE)
+    @RequiresPermissions("system:dept:edit")
+    @PostMapping("/edit")
+    @ResponseBody
+    public AjaxResult editSave(@Validated Dept dept) {
+        if (UserConstants.DEPT_NAME_NOT_UNIQUE.equals(deptService.checkDeptNameUnique(dept))) {
+            return error("修改部门'" + dept.getDeptName() + "'失败，部门名称已存在");
+        } else if(dept.getParentId().equals(dept.getDeptId())) {
+            return error("修改部门'" + dept.getDeptName() + "'失败，上级部门不能是自己");
+        }
+        return toAjax(deptService.updateDept(dept));
+    }
+
+    /**
+     * 删除
+     */
+    @Log(title = "部门管理", businessType = BusinessType.DELETE)
+    @RequiresPermissions("system:dept:remove")
+    @GetMapping("/remove/{deptId}")
+    @ResponseBody
+    public AjaxResult remove(@PathVariable("deptId") Long deptId) {
+        if (deptService.selectDeptCount(deptId) > 0) {
+            return AjaxResult.warn("存在下级部门,不允许删除");
+        }
+        if (deptService.checkDeptExistUser(deptId)) {
+            return AjaxResult.warn("部门存在用户,不允许删除");
+        }
+        return toAjax(deptService.deleteDeptById(deptId));
+    }
+
+  // ...
+}
+```
+>同样的，你也可以看到权限管理也是通过类似的注解（`@RequiresPermissions`）机制来实现的。所以我们可以看到，通过注解+AOP最终的目标是为了实现模块的解耦。
