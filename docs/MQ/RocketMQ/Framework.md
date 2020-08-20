@@ -8,54 +8,54 @@
 
 先讲专业术语的含义，后面会画流程图来更好的去理解它们。
 
-### <font color=red size=4 face='黑体'>Producer</font>
+### Producer
 
 消息生产者，位于用户的进程内，`Producer通过NameServer获取所有Broker的路由信息`，根据负载均衡策略选择将消息发到哪个Broker，然后调用Broker接口提交消息。
 
-### <font color=red size=4 face='黑体'>Producer Group</font>
+### Producer Group
 
 生产者组，简单来说就是多个发送同一类消息的生产者称之为一个生产者组。
 
-### <font color=red size=4 face='黑体'>Consumer</font>
+### Consumer
 
 消息消费者，位于用户进程内。Consumer通过NameServer获取所有broker的路由信息后，向Broker发送Pull请求来获取消息数据。
 Consumer可以以两种模式启动，**广播（Broadcast）和集群（Cluster），广播模式下，一条消息会发送给所有Consumer，集群模式下消息只会发送给一个Consumer。**
 
-### <font color=red size=4 face='黑体'>Consumer Group</font>
+### Consumer Group
 
 消费者组，和生产者类似，消费同一类消息的多个 Consumer 实例组成一个消费者组。
 
-### <font color=red size=4 face='黑体'>Topic</font>
+### Topic
 
 Topic用于将消息按主题做划分，**Producer将消息发往指定的Topic，Consumer订阅该Topic就可以收到这条消息**。Topic跟发送方和消费方都没有强关联关系，
 发送方可以同时往多个Topic投放消息，消费方也可以订阅多个Topic的消息。在RocketMQ中，**Topic是一个逻辑上的概念。消息存储不会按Topic分开。**
 
-### <font color=red size=4 face='黑体'>Message</font>
+### Message
 
 代表一条消息，使用`MessageId`唯一识别，用户在发送时可以设置messageKey，便于之后查询和跟踪。一个 Message 必须指定 Topic，相当于寄信的地址。
 Message 还有一个可选的 Tag 设置，以便消费端可以基于 Tag 进行过滤消息。也可以添加额外的键值对，例如你需要一个业务 key 来查找 Broker 上的消息，
 方便在开发过程中诊断问题。
 
-### <font color=red size=4 face='黑体'>Tag</font>
+### Tag
 
 标签可以被认为是对 Topic 进一步细化。一般在相同业务模块中通过引入标签来标记不同用途的消息。
 
-### <font color=red size=4 face='黑体'>Broker</font>
+### Broker
 
 Broker是RocketMQ的核心模块，负责接收并存储消息，同时提供Push/Pull接口来将消息发送给Consumer。Consumer可选择从Master或者Slave读取数据。
 多个主/从组成Broker集群，集群内的Master节点之间不做数据交互。Broker同时提供消息查询的功能，可以通过MessageID和MessageKey来查询消息。
 Broker会将自己的Topic配置信息实时同步到NameServer。
 
-### <font color=red size=4 face='黑体'>Queue</font>
+### Queue
 
 **Topic和Queue是1对多的关系，一个Topic下可以包含多个Queue**，主要用于`负载均衡`。发送消息时，用户只指定Topic，
 Producer会根据Topic的路由信息选择具体发到哪个Queue上。Consumer订阅消息时，会根据`负载均衡策略`决定订阅哪些Queue的消息。
 
-### <font color=red size=4 face='黑体'>Offset</font>
+### Offset
 
 RocketMQ在存储消息时会为每个Topic下的每个Queue生成一个消息的索引文件，每个Queue都对应一个Offset记录当前Queue中消息条数。
 
-### <font color=red size=4 face='黑体'>NameServer</font>
+### NameServer
 
 NameServer可以看作是RocketMQ的注册中心，它管理两部分数据：集群的Topic-Queue的路由配置；Broker的实时配置信息。
 其它模块通过NameServer提供的接口获取最新的Topic配置和路由信息。

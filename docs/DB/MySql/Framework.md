@@ -13,14 +13,14 @@
 ## MySQL存储引擎
 MySQL存储引擎有近十种，最常用的两种分别是MyISAM和InnoDB.
 
-- 查看sql现在都有什么存储引擎
+- 查看mysql现在都有什么存储引擎
 ``` sql
 show engines;
 ```
 ![MySQL现有存储引擎](../img/framework_002.jpg "MySQL现有存储引擎")
-- 查看sql当前默认的存储引擎
+- 查看mysql当前默认的存储引擎
 ``` sql
-show varizbles like '%storage_engine%';
+show variables like '%storage_engine%';
 ```
 ![MySQL当前默认的存储引擎](../img/framework_003.jpg "MySQL当前默认的存储引擎")
 
@@ -435,7 +435,7 @@ where子句的值总是false,不用用来获取任何元组
 
 右连接同理
 
-::: tips 结论
+::: tip 结论
 Join语句的优化
 
 尽可能减少Join语句中的NestedLoop的循环总次数：“永远用小结果集驱动大的结果集”。
