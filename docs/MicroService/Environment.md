@@ -219,8 +219,8 @@ docker restart redis
 ```
 修改完执行`docker restart redis`，`docker exec -it redis redis-cli`
 
-### 开发环境
-#### maven配置
+## 开发环境
+### maven配置
 在settings中配置阿里云镜像，配置jdk1.8。安装插件lombok，mybatisX。
 ``` xml
 <mirrors>   
@@ -233,7 +233,7 @@ docker restart redis
 </mirrors>  
 ```
 
-#### vsCode
+### vsCode
 
 下载vsCode用于前端管理系统。在vsCode里安装插件。
 
@@ -248,7 +248,7 @@ docker restart redis
 - open in brower
 - Vetur
 
-#### 安装git
+### 安装git
 下载git客户端，右键桌面Git GUI/bash Here。点击git bash
 ``` markdown
 # 配置用户名
@@ -269,4 +269,555 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6MWhGXSKdRxr1mGPZysDrcwABMTrxc8Va2IWZyIMM
 # 测试
 ssh -T git@gitee.com
 测试成功
+```
+
+### 码云 初始化项目
+在码云新建仓库，仓库名gulimall，选择语言java，在.gitignore选中maven，许可证选Apache-2.0，开发模型选生成/开发模型，
+开发时在dev分支，发布时在master分支，创建。
+
+在IDEA中New–Project from version control–git–复制刚才项目的地址，如https://gitee.com/hanferm/gulimall.git
+
+然后New Module–Spring Initializer–com.atguigu.gulimall,Artifact填 gulimall-product。Next—选择web，springCloud routing里选中openFeign。
+
+依次创建出以下服务 
+- 商品服务product
+- 存储服务ware
+- 订单服务order
+- 优惠券服务coupon
+- 用户服务member
+
+**共同点**：
+1. 导入web和openFeign
+2. group：com.atguigu.gulimall
+3. Artifact：gulimall-XXX
+4. 每一个服务，包名com.atguigu.gulimall.XXX{product/order/ware/coupon/member}
+5. 模块名：gulimall-XXX
+
+项目的root聚合服务
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.atguigu.gulimall</groupId>
+	<artifactId>gulimall</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>gulimall</name>
+	<description>聚合服务</description>
+
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>gulimall-coupon</module>
+		<module>gulimall-member</module>
+		<module>gulimall-order</module>
+		<module>gulimall-product</module>
+		<module>gulimall-ware</module>
+
+	</modules>
+</project>
+```
+在maven窗口刷新，并点击+号，找到刚才的pom.xml添加进来，发现多了个root。这样比如运行root的clean命令，其他项目也一起clean了。
+
+修改总项目的.gitignore，把小项目里的垃圾文件在提交的时候忽略掉，比如HTLP.md。。。
+
+在version control/local Changes，点击刷新看Unversioned Files，可以看到变化。
+
+全选最后剩下21个文件，选择右键、Add to VCS。
+
+在IDEA中安装插件：gitee，重启IDEA。
+
+在DefaultChangelist右键点击commit，去掉右面的勾选Perform code analysis、CHECK TODO，然后点击COMMIT，有个下拉列表，
+点击commit and push才会提交到云端。此时就可以在浏览器中看到了。
+
+### 数据库
+>注意重启虚拟机和docker后里面的容器就关了。
+
+``` markdown
+sudo docker ps
+sudo docker ps -a
+# 这两个命令的差别就是后者会显示  【已创建但没有启动的容器】
+
+# 我们接下来设置我们要用的容器每次都是自动启动
+sudo docker update redis --restart=always
+sudo docker update mysql --restart=always
+# 如果不配置上面的内容的话，我们也可以选择手动启动
+sudo docker start mysql
+sudo docker start redis
+# 如果要进入已启动的容器
+sudo docker exec -it mysql /bin/bash
+```
+
+建立数据库：字符集选utf8mb4，他能兼容utf8且能解决一些乱码的问题。分别建立了下面数据库
+``` markdown
+gulimall-oms
+gulimall-pms
+gulimall-sms
+gulimall-ums
+gulimall-wms
+```
+然后打开对应的sql在对应的数据库中执行。依次执行。(注意sql文件里没有建库语句)
+
+### 后台管理系统
+在码云上搜索[人人开源](https://gitee.com/renrenio)，我们使用renren-fast，renren-fast-vue项目。
+
+``` shell script
+git clone https://gitee.com/renrenio/renren-fast.git
+
+git clone https://gitee.com/renrenio/renren-fast-vue.git
+```
+#### 人人后台
+将renren-fast 项目放到gulimall项目中
+
+在项目里的pom.xml添加一个
+``` xml
+<modules>
+    <module>gulimall-coupon</module>
+    <module>gulimall-member</module>
+    <module>gulimall-order</module>
+    <module>gulimall-product</module>
+    <module>gulimall-ware</module>
+
+    <module>renren-fast</module>
+</modules>
+```
+然后打开renren-fast/db/mysql.sql，复制全部，在数据库中创建库gulimall-admin，粘贴刚才的内容执行。
+
+然后修改项目里renren-fast中的application.yml，修改application-dev.yml中的数库库的url，通常把localhost修改为192.168.56.10即可。
+
+``` yaml
+url: jdbc:mysql://192.168.56.10:3306/gulimall-admin?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+username: root
+password: root
+```
+然后执行java下的RenrenApplication
+
+浏览器输入http://localhost:8080/renren-fast/ 得到{“msg”:“invalid token”,“code”:401}就代表无误
+
+#### 人人vue
+用VSCode打开renren-fast-vue
+
+安装node：http://nodejs.cn/download/ 选择windows下载。下载完安装。
+
+NPM是随同NodeJS一起安装的包管理工具，如JavaScript-NPM，java-Maven。
+
+命令行输入node -v 检查配置好了，配置npm的镜像仓库地址，再执行
+``` shell script
+node -v
+npm config set registry http://registry.npm.taobao.org/
+```
+VScode的终端中输入 npm install，会报错，然后进行如下操作：
+``` markdown
+先把node_modules全部删除，然后再npm install chromedriver --chromedriver_cdnurl=http://cdn.npm.taobao.org/dist/chromedriver，最后npm install。
+```
+在VScode的终端中输入 `npm install` 下载前端依赖组件 启动运行`npm run dev`
+
+浏览器输入localhost:8001 就可以看到内容了，登录admin admin
+
+### IDEA项目准备
+逆向工程搭建
+``` shell script
+git clone https://gitee.com/renrenio/renren-generator.git
+```
+导入到项目当中，同样配置好pom.xml
+``` xml
+<modules>
+		<module>gulimall-coupon</module>
+		<module>gulimall-member</module>
+		<module>gulimall-order</module>
+		<module>gulimall-product</module>
+		<module>gulimall-ware</module>
+		<module>renren-fast</module>
+		<module>renren-generator</module>
+</modules>
+```
+修改application.yml
+``` yaml
+url: jdbc:mysql://192.168.56.10:3306/gulimall-pms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+username: root
+password: root
+```
+然后修改generator.properties（这里乱码的百度IDEA设置properties编码）
+``` properties
+# 主目录
+mainPath=com.atguigu
+#包名
+package=com.atguigu.gulimall
+#模块名
+moduleName=product
+#作者
+author=hh
+#email
+email=55333@qq.com
+#表前缀(类名不会包含表前缀) # 我们的pms数据库中的表的前缀都pms
+# 如果写了表前缀，每一张表对于的javaBean就不会添加前缀了
+tablePrefix=pms_
+```
+注释掉product项目下类中的`//import org.apache.shiro.authz.annotation.RequiresPermissions`;
+
+启动generator服务，代码生成器访问路径 `http://localhost`, 点击生成代码, 将代码放到相应的服务目录下
+
+然后在项目上右击（在项目上右击很重要）new modules— maven—然后在name上输入gulimall-common。
+
+在pom.xml中也自动添加了<module>gulimall-common</module>
+
+在common项目的pom.xml中添加
+``` xml
+<!-- mybatisPLUS-->
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-boot-starter</artifactId>
+    <version>3.3.2</version>
+</dependency>
+<!--简化实体类，用@Data代替getset方法-->
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.8</version>
+</dependency>
+<!-- httpcomponent包https://mvnrepository.com/artifact/org.apache.httpcomponents/httpcore -->
+<dependency>
+    <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpcore</artifactId>
+    <version>4.4.13</version>
+</dependency>
+<dependency>
+    <groupId>commons-lang</groupId>
+    <artifactId>commons-lang</artifactId>
+    <version>2.6</version>
+</dependency>
+```
+在product项目中的pom.xml中加入下面内容
+``` xml
+<dependency>
+    <groupId>com.atguigu.gulimall</groupId>
+    <artifactId>gulimall-common</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+解决报错问题。
+
+### 整合与测试
+
+#### **product**
+在common的pom.xml中导入
+``` xml
+<!-- 数据库驱动 https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>8.0.17</version>
+</dependency>
+<!--tomcat里一般都带-->
+<dependency>
+    <groupId>javax.servlet</groupId>
+    <artifactId>servlet-api</artifactId>
+    <version>2.5</version>
+    <scope>provided</scope>
+</dependency>
+```
+在product项目的resources目录下新建application.yml
+``` yaml
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.56.10:3306/gulimall-pms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.jdbc.Driver
+
+# MapperScan
+# sql映射文件位置
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+```
+>classpath 和 classpath* 区别：
+>
+>classpath：只会到你的class路径中查找找文件;
+>
+>classpath*：不仅包含class路径，还包括jar文件中(class路径)进行查找
+>
+>classpath*的使用：当项目中有多个classpath路径，并同时加载多个classpath路径下（此种情况多数不会遇到）的文件，
+>`*`就发挥了作用，如果不加`*`，则表示仅仅加载第一个classpath路径。
+
+然后在主启动类上加上注解@MapperScan()
+
+``` java
+@MapperScan("com.mwj.gulimall.product.dao")
+@SpringBootApplication
+public class gulimallProductApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(gulimallProductApplication.class, args);
+    }
+}
+```
+然后去测试，先通过下面方法给数据库添加内容
+``` java
+@SpringBootTest
+class gulimallProductApplicationTests {
+    @Autowired
+    BrandService brandService;
+
+    @Test
+    void contextLoads() {
+        BrandEntity brandEntity = new BrandEntity();
+        brandEntity.setDescript("哈哈1哈");
+        brandEntity.setName("华为");
+        brandService.save(brandEntity);
+        System.out.println("保存成功");
+    }
+}
+```
+
+#### **coupon**
+
+重新打开generator逆向工程，修改generator.properties
+``` yaml
+# 主目录
+mainPath=com.atguigu
+#包名
+package=com.atguigu.gulimall
+#模块名
+moduleName=coupon
+#作者
+autho=hh
+#email
+email=55333@qq.com
+#表前缀(类名不会包含表前缀) # 我们的pms数据库中的表的前缀都pms
+# 如果写了表前缀，每一张表对于的javaBean就不会添加前缀了
+tablePrefix=sms_
+```
+修改yml数据库信息
+``` yaml
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.56.10:3306/gulimall-sms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+server:
+  port: 7000
+```
+
+让coupon也依赖于common，修改pom.xml
+``` xml
+<dependency>
+    <groupId>com.atguigu.gulimall</groupId>
+    <artifactId>gulimall-common</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+resources下src包先删除
+
+添加application.yml
+``` yaml
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.56.10:3306/gulimall-sms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+```
+**测试url**:`http://localhost:8080/coupon/coupon/list`
+``` markdown
+{"msg":"success","code":0,"page":{"totalCount":0,"pageSize":10,"totalPage":0,"currPage":1,"list":[]}}
+```
+
+#### **member**
+重新使用代码生成器生成ums
+
+模仿上面修改下面两个配置
+
+代码生成器里：
+``` yaml
+    url: jdbc:mysql://192.168.56.10:3306/gulimall-ums?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+```
+``` yaml
+# 主目录
+mainPath=com.atguigu
+#包名
+package=com.atguigu.gulimall
+#模块名
+moduleName=member
+#作者
+author=hh
+#email
+email=55333@qq.com
+#表前缀(类名不会包含表前缀) # 我们的pms数据库中的表的前缀都pms
+# 如果写了表前缀，每一张表对于的javaBean就不会添加前缀了
+tablePrefix=ums_
+```
+重启RenrenApplication.java，然后同样去浏览器获取压缩包解压到对应member项目目录
+
+member也导入依赖
+``` xml
+<dependency>
+    <groupId>com.atguigu.gulimall</groupId>
+    <artifactId>gulimall-common</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+同样新建application.yml
+``` yaml
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.56.10:3306/gulimall-ums?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+server:
+  port: 8000
+```
+**测试url**: `http://localhost:8000/member/growthchangehistory/list`
+``` markdown
+{"msg":"success","code":0,"page":{"totalCount":0,"pageSize":10,"totalPage":0,"currPage":1,"list":[]}}
+```
+#### **order**
+
+修改代码生成器
+``` yaml
+ url: jdbc:mysql://192.168.56.10:3306/gulimall-oms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+```
+``` yaml
+#代码生成器，配置信息
+
+# 主目录
+mainPath=com.atguigu
+#包名
+package=com.atguigu.gulimall
+#模块名
+moduleName=order
+#作者
+author=hh
+#email
+email=55333@qq.com
+#表前缀(类名不会包含表前缀) # 我们的pms数据库中的表的前缀都pms
+# 如果写了表前缀，每一张表对于的javaBean就不会添加前缀了
+tablePrefix=oms_
+```
+运行RenrenApplication.java重新生成后去下载解压放置。
+
+application.yml
+``` yaml
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.56.10:3306/gulimall-oms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      
+server:
+  port: 9000
+```
+导入common依赖
+``` xml
+<dependency>
+    <groupId>com.atguigu.gulimall</groupId>
+    <artifactId>gulimall-common</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+**测试url**: `http://localhost:9000/order/order/list`
+``` markdown
+{"msg":"success","code":0,"page":{"totalCount":0,"pageSize":10,"totalPage":0,"currPage":1,"list":[]}}
+```
+
+#### ware
+修改代码生成器
+``` yaml
+url: jdbc:mysql://192.168.56.10:3306/gulimall-wms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+```
+``` yaml
+#代码生成器，配置信息
+
+# 主目录
+mainPath=com.atguigu
+#包名
+package=com.atguigu.gulimall
+#模块名
+moduleName=ware
+#作者
+author=hh
+#email
+email=55333@qq.com
+#表前缀(类名不会包含表前缀) # 我们的pms数据库中的表的前缀都pms
+# 如果写了表前缀，每一张表对于的javaBean就不会添加前缀了
+tablePrefix=wms_
+```
+运行RenrenApplication.java重新生成后去下载解压放置。
+
+application.yml
+``` yaml
+spring:
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.56.10:3306/gulimall-wms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      
+server:
+  port: 11000
+```
+导入依赖包
+``` xml
+<dependency>
+    <groupId>com.atguigu.gulimall</groupId>
+    <artifactId>gulimall-common</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+**测试url** : `http://localhost:11000/ware/wareinfo/list`
+``` markdown
+{"msg":"success","code":0,"page":{"totalCount":0,"pageSize":10,"totalPage":0,"currPage":1,"list":[]}}
 ```
