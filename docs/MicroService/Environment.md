@@ -247,6 +247,7 @@ docker restart redis
 - Live Server
 - open in brower
 - Vetur
+- Vue 2 Snippets 语法提示
 
 ### 安装git
 下载git客户端，右键桌面Git GUI/bash Here。点击git bash
