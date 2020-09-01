@@ -80,9 +80,9 @@
 ```
 在VSCode中安装vue 2 snippets插件，在谷歌浏览器中安装
 
-### 单向绑定&双向绑定
+## 单向绑定&双向绑定
 
-#### **v-text、v-html.html**
+### **v-text、v-html.html**
 
 ``` html
 <!DOCTYPE html>
@@ -133,7 +133,7 @@
 
 插值闪烁
 
-#### **v-bind.html**
+### **v-bind.html**
 - 单向绑定
 ``` html
 <!DOCTYPE html>
@@ -420,9 +420,9 @@
 
 </html>
 ```
-### 计算属性和侦听器
+## 计算属性和侦听器
 
-#### **1、计算属性和侦听器.html**
+### **1、计算属性和侦听器.html**
 ``` html
 <!DOCTYPE html>
 <html lang="en">
@@ -480,7 +480,7 @@
 </html>
 ```
 
-#### **2、过滤器.html**
+### **2、过滤器.html**
 ``` html
 <!DOCTYPE html>
 <html lang="en">
@@ -538,7 +538,7 @@
 
 </html>
 ```
-### 组件化基础
+## 组件化基础
 ``` html
 <!DOCTYPE html>
 <html lang="en">
@@ -601,7 +601,7 @@
 
 </html>
 ```
-### 生命周期和钩子函数
+## 生命周期和钩子函数
 ``` html
 <!DOCTYPE html>
 <html lang="en">
@@ -674,3 +674,22 @@
 
 </html>
 ```
+## Vue模块化开发
+
+### 1. `npm install webpack -g`
+
+全局安装webpack1
+
+### 2. `npm install -g @vue/cli-init`
+
+全局安装vue脚手架
+
+### 3、初始化vue项目
+
+`vue init webpack appname` vue脚手架使用webpack模板初始化一个appname项目
+
+进入创建的文件夹下 输入cmd命令进入命令执行窗口，输入`vue init webpack appname`命令
+
+到此构建一个vue项目已完成,目录如下
+
+![初始化vue项目](../MicroService/img/vue_001.png "初始化vue项目")
